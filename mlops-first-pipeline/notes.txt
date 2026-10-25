@@ -1,0 +1,65 @@
+**Phase-1: Machine Learning Foundation for MLops**
+
+Step-1: Create virtual env
+python -m venv venv
+
+Step-2: Activate virtual env
+venv\Scripts\Activate
+
+Step-3:  Create working directory and switch to that
+mkdir mlops-first-pipeline
+
+Step-4: Install required packages
+pip install -r requirements.txt
+
+Step-5 Implement a simple machine learning model
+Step-6 Train and Save the model
+python train.py
+
+Step-7 Implement FastAPI and create endpoints
+Step-8 Start the FastAPI
+uvicorn main:app --reload OR python -m uvicorn main:app --reload
+
+**Phase 2: Virtualization with Docker**
+
+Need of docker?
+
+-Imagine you are running your code in your laptop with different programming version and another user its working on a different version...
+
+Reason of failures:
+-Using different programming version
+-Using different version of libraries like sckit-learn, FastAPI
+-Missing Python packages
+-Different OS dependencies
+
+Docker helps package your application code, runtime, dependencies and startup instructions into a standardized image
+
+4 major requirements:
+- Dockerfile - Set of instructions for packaging ML application
+- Image - Packaged reusable application artifact
+- Container - A running instance of the image
+- Port Mapping - Makes the API inside the container accessible from your system
+
+Docker Commands:
+docker ps
+Check running containers
+
+docker ps -a
+Check all active/non-active containers
+
+docker build -t mlops-iris-image-cs  # -t= tag name or name of the image
+
+Run
+docker run -d -p 8000:8000 --name mlops-cs-container mlops-iris-image-cs
+
+
+**Phase 3: Automated Testing and CI/CD with Github actions**
+
+Our goal:
+Whenever we push code on GitHub, the system should automatically run tests and build the Docker image. Later we will extend the same pipeline to publish the image and deploy it
+
+1. Developer pushes the code
+2. GitHub actions starts the workflow
+3. Triggered by a push or pull request
+4. Run tests and validate the model API behavior
+5. Build Image and verify Docker packaging
