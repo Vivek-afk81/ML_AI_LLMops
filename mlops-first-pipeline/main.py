@@ -3,6 +3,7 @@ import joblib
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
+
 app = FastAPI(title="Iris Model API")
 
 model_path = Path("models/iris_model.joblib")
