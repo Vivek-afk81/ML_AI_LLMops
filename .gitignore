@@ -1,0 +1,28 @@
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.swp
+
+# Dependencies and generated output
+node_modules/
+build/
+dist/
+target/
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+kiet-env/
+
+# Local environment files, logs, and temporary files
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
