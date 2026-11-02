@@ -27,7 +27,7 @@ X_train, X_test, y_train, y_test = train_test_split(X,
                                                     test_size=0.80)
 
 
-n_estimators = 1
+n_estimators = 20
 random_state = 42
 
 # Model settings we want to track in MLFlow

@@ -148,3 +148,23 @@ Version-2: retrained model
 Version-3: improved model
 
 We can assign the alias champion to the model version we want our application to use
+
+Load the champion model in FastAPI
+
+Containerize the MLflow connected API
+
+Restart mlflow server:
+ mlflow server `
+--backend-store-uri sqlite:///mlflow.db `
+--host 127.0.0.1 `
+--port 6001
+
+Build the updated image:
+docker build -t iris-ml-api-cs:model_v2
+
+Start the container:
+docker run -d `
+--name iris-ml-api-container `
+-p 8000:8000 `
+-e  MLFLOW_TRACKING_URI=http://host.docker.internal:6001 `
+`iris-ml-api-cs:model_v2
