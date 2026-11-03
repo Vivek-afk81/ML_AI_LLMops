@@ -1,36 +1,50 @@
 from pathlib import Path
 import joblib
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException,Request
 from pydantic import BaseModel, Field
 import mlflow
 import mlflow.sklearn
 import os
-app = FastAPI(title="Iris Model API")
+from contextlib import asynccontextmanager
+from typing import Callable
 
+
+
+
+# app = FastAPI(title="Iris Model API")
+
+#mlflow configuration
 MLFLOW_TRACKING_URI =os.getenv(
     "MLFLOW_TRACKING_URI","http://127.0.0.1:6001"
 )
+
 #Molde URI : models:/iris-classifier@champion
 MODEL_URI="models:/iris-classifier@champion"
 
 #Tell mlflow client where the model registry lives
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+# mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+
+def load_mlflow_model():
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    return mlflow.sklearn.load_model(MODEL_URI)
+
 
 # model_path = Path("models/iris_model.joblib")
 # model = joblib.load(model_path)
 
-try:
-    model=mlflow.sklearn.load_model(MODEL_URI)
-    client = mlflow.MlflowClient()
-    champion_version=client.get_model_version_by_alias(
-        name="iris-classifier", alias="champion"
-    )
-    model_version=champion_version.version
-    print(f"Loade model: iris-classifier{model_version}")
-except Exception as e:
-    raise RuntimeError(
-        f"Failed to load model from {MODEL_URI}. Error: {str(e)}"
-    )
+# try:
+#     model=mlflow.sklearn.load_model(MODEL_URI)
+#     client = mlflow.MlflowClient()
+#     champion_version=client.get_model_version_by_alias(
+#         name="iris-classifier", alias="champion"
+#     )
+#     model_version=champion_version.version
+#     print(f"Loade model: iris-classifier{model_version}")
+# except Exception as e:
+#     raise RuntimeError(
+#         f"Failed to load model from {MODEL_URI}. Error: {str(e)}"
+#     )
 
 
 class IrisRequest(BaseModel):
@@ -39,24 +53,64 @@ class IrisRequest(BaseModel):
     petal_length: float = Field(gt=0)
     petal_width: float = Field(gt=0)
 
-@app.get("/")
-def health_check():
-    return {"message": "API is ready to serve...",
-            "model-name":"iris-classifier",
-            "model-version":model_version}
+#Application Factory
+def create_app(model_loader:Callable=load_mlflow_model,
+               version_loader:Callable=None):
+    if version_loader is None:
+        def version_loader():
+            client=mlflow.MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
+            champion=client.get_model_version_by_alias(
+                name="iris-classifier", alias="champion"
+            )
+            return champion.version
+    @asynccontextmanager
+    async def lifespan(app:FastAPI):
+        try:
+            app.state.model=model_loader()
+        except Exception as e:
+            raise RuntimeError(
+                f"failed to load MLflow champion model ..\n{e}"
+            ) from e
 
-@app.post("/predict")
-def predict(data: IrisRequest):
-    features = [[
-        data.sepal_length,
-        data.sepal_width,
-        data.petal_length,
-        data.petal_width
-    ]]
+        client =mlflow.MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
+        champion=client.get_model_version_by_alias(
+            name="iris-classifier", alias="champion"
+        )
+        app.state.model_version=version_loader()
+        print(f"Loaded iris-classifier {app.state.model_version}")
+        yield
 
-    prediction = int(model.predict(features)[0])
+    app=FastAPI(
+        title="Iris Model API",
+        description="API for serving the iris-classifier model",
+        version="3.0.0",
+        lifespan=lifespan
+    )
 
-    return {
-        "prediction": prediction,
-        "class_name": ["setosa", "versicolor", "virginica"][prediction]
-    }
+    @app.get("/")
+    def health_check():
+        return {"message": "API is ready to serve...",
+                "model-name":"iris-classifier",
+                "model-version":app.state.model_version}
+
+    @app.post("/predict")
+    def predict(data: IrisRequest,request:Request):
+        model=request.app.state.model
+        features = [[
+            data.sepal_length,
+            data.sepal_width,
+            data.petal_length,
+            data.petal_width
+        ]]
+
+        prediction = int(model.predict(features)[0])
+
+        return {
+            "prediction": prediction,
+            "class_name": ["setosa", "versicolor", "virginica"][prediction]
+        }
+
+    return app
+
+
+app = create_app()
