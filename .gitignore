@@ -19,6 +19,7 @@ __pycache__/
 .venv/
 venv/
 kiet-env/
+.pytest_cache/
 
 # Local environment files, logs, and temporary files
 .env

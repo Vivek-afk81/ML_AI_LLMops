@@ -22,13 +22,13 @@ def client():
         version_loader=fake_version_loader
     )
 
-def test_health_endpoint():
+def test_health_endpoint(client):
     response=client.get("/health")
     assert response.status_code==200
     assert response.json()=={"status":"healthy"}
     assert response.json()["model_version"]=="test-version"
 
-def test_valid_iris_prediction():
+def test_valid_iris_prediction(client):
 
     payload = {
     "sepal_length": 3.4,
