@@ -55,30 +55,36 @@ class IrisRequest(BaseModel):
 
 #Application Factory
 def create_app(model_loader:Callable=load_mlflow_model,
-               version_loader:Callable=None):
+               version_loader:Callable=None
+):
+    
     if version_loader is None:
         def version_loader():
+            
             client=mlflow.MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
+            
             champion=client.get_model_version_by_alias(
                 name="iris-classifier", alias="champion"
             )
             return champion.version
+        
     @asynccontextmanager
     async def lifespan(app:FastAPI):
         try:
             app.state.model=model_loader()
+            app.state.model_version=version_loader()
+
+            print(
+                f"Loaded iris-classifier"
+                f"{app.state.model_version}"
+            )
+
         except Exception as e:
             raise RuntimeError(
                 f"failed to load MLflow champion model ..\n{e}"
             ) from e
-
-        client =mlflow.MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
-        champion=client.get_model_version_by_alias(
-            name="iris-classifier", alias="champion"
-        )
-        app.state.model_version=version_loader()
-        print(f"Loaded iris-classifier {app.state.model_version}")
         yield
+
 
     app=FastAPI(
         title="Iris Model API",

@@ -21,13 +21,21 @@ def client():
         model_loader=fake_model_loader,
         version_loader=fake_version_loader
     )
+
+    # Context manager starts and stops the application lifespan
+    with TestClient(app) as test_client:
+        yield test_client
+
     return TestClient(app)
 
 def test_health_endpoint(client):
     response=client.get("/health")
     assert response.status_code==200
-    assert response.json()=={"status":"healthy"}
-    assert response.json()["model_version"]=="test-version"
+    assert response.json() == {
+        "status": "healthy",
+        "model_name": "iris-classifier",
+        "model_version": "test-version"
+    }
 
 def test_valid_iris_prediction(client):
 
