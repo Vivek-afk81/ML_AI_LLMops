@@ -21,6 +21,7 @@ def client():
         model_loader=fake_model_loader,
         version_loader=fake_version_loader
     )
+    return TestClient(app)
 
 def test_health_endpoint(client):
     response=client.get("/health")
