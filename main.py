@@ -95,9 +95,11 @@ def create_app(model_loader:Callable=load_mlflow_model,
 
     @app.get("/health")
     def health_check():
-        return {"message": "API is ready to serve...",
-                "model-name":"iris-classifier",
-                "model-version":app.state.model_version}
+        return {
+            "status": "healthy",
+            "model_name": "iris-classifier",
+            "model_version": app.state.model_version
+        }
 
     @app.post("/predict")
     def predict(data: IrisRequest,request:Request):
