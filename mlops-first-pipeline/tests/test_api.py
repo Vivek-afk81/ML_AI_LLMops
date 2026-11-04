@@ -1,14 +1,32 @@
 # Import TestClient so we can send simulated HTTP requests
 from fastapi.testclient import TestClient
+import pytest
 
-from main import app
+from main import create_app
 
-client=TestClient(app)
+
+class FakeIrisModel:
+    def predict(self,features):
+        return [0]
+
+def fake_model_loader():
+    return FakeIrisModel()
+
+def fake_version_loader():
+    return "test-version"
+
+@pytest.fixture # makes an object of client that can be used in test functions
+def client():
+    app=create_app(
+        model_loader=fake_model_loader,
+        version_loader=fake_version_loader
+    )
 
 def test_health_endpoint():
     response=client.get("/health")
     assert response.status_code==200
     assert response.json()=={"status":"healthy"}
+    assert response.json()["model_version"]=="test-version"
 
 def test_valid_iris_prediction():
 
@@ -29,3 +47,4 @@ def test_valid_iris_prediction():
 
     assert result["class_name"] in ["setosa", "versicolor", "virginica"]
     assert result["prediction"] in [0, 1, 2]
+ 
