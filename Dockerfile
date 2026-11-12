@@ -10,7 +10,7 @@ COPY requirements.txt .
 #install the dependencies
 RUN pip install -r requirements.txt
 
-#Copy application code and saved odel inside /app
+#Copy application code and saved model inside /app
 COPY . .
 
 #Document the port used by the fast api application
