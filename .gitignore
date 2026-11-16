@@ -27,3 +27,16 @@ kiet-env/
 !.env.example
 *.log
 *.tmp
+
+#mlflow
+mlruns/
+mlartifacts/
+chroma_db/
+*.db
+
+#Downloaded model weights
+models/*.pt
+models/*.pth
+models/*.bin
+models/*.safetensors
+models/*.onnx
