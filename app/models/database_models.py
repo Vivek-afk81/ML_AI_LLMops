@@ -1,4 +1,4 @@
-
+import uuid  #UUID used, jisse har memory ko automatically unique ID mil jaaye.
 from datetime import datetime, timezone
 
 from sqlalchemy import (
@@ -18,10 +18,10 @@ class Memory(Base):
     SQLAlchemy model representing a saved memory.
     """
 
-    __tablename__ = "memories"
+    __tablename__ = "memories" #SQlite mein table ka naam memories hoga
 
     # Unique identifier
-    id = Column(String(36), primary_key=True)
+    id = Column(String(36), primary_key=True,default=lambda: str(uuid.uuid4()))
 
     # Input information
     input_type = Column(String(20), nullable=False)

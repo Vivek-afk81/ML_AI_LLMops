@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from typing import Literal
 
@@ -10,10 +9,7 @@ from pydantic import (
     model_validator,
 )
 
-
-# ==========================================
 # Memory Creation Request
-# ==========================================
 
 class MemoryCreate(BaseModel):
 
@@ -62,9 +58,7 @@ class MemoryCreate(BaseModel):
         return self
 
 
-# ==========================================
 # Memory Response
-# ==========================================
 
 class MemoryResponse(BaseModel):
 
