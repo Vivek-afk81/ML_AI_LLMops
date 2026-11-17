@@ -28,6 +28,21 @@ class EmbeddingService:
 
         return self._model
 
+    
+    def _validate_embedding(self, embedding) -> list[float]:
+        """Validate embedding dimensions before returning."""
+
+        vector = embedding.tolist()
+
+        if len(vector) != self.embedding_dimension:
+            raise ValueError(
+                f"Expected embedding dimension "
+                f"{self.embedding_dimension}, got {len(vector)}."
+            )
+
+        return vector
+
+
     def generate_embedding(self, text: str) -> list[float]:
         """Convert one text into an embedding vector."""
 
@@ -42,7 +57,7 @@ class EmbeddingService:
             normalize_embeddings=self.normalize,
         )
 
-        return embedding.tolist()
+        return self._validate_embedding(embedding)
 
     def generate_embeddings(
         self,
@@ -64,7 +79,10 @@ class EmbeddingService:
             normalize_embeddings=self.normalize,
         )
 
-        return embeddings.tolist()
+        return [
+            self._validate_embedding(embedding)
+            for embedding in embeddings
+        ]
 
 
 # Shared service instance

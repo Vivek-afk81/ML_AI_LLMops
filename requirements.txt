@@ -26,3 +26,5 @@ mlflow
 # Testing
 pytest
 httpx
+
+certifi

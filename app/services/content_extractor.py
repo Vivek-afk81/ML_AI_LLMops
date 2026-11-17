@@ -2,9 +2,11 @@ import http.client
 import ipaddress
 import socket
 import ssl
+import certifi
 
 from urllib.parse import urlparse, urlunparse, urljoin
 
+import trafilatura
 
 MAX_CONTENT_SIZE = 2 * 1024 * 1024  # 2 MB
 REQUEST_TIMEOUT = 10
@@ -110,7 +112,9 @@ class PinnedHTTPSConnection(http.client.HTTPSConnection):
             hostname,
             port,
             timeout=REQUEST_TIMEOUT,
-            context=ssl.create_default_context(),
+            context=ssl.create_default_context(
+                cafile=certifi.where()
+            ),
         )
         self.ip_address = ip_address
 
@@ -191,12 +195,19 @@ def fetch_url(url: str) -> dict:
             _validate_and_resolve(current_url)
         )
 
-        response, connection = _fetch_once(
-            normalized_url,
-            parsed,
-            ip_address,
-            port,
-        )
+        try:
+            response, connection = _fetch_once(
+                normalized_url,
+                parsed,
+                ip_address,
+                port,
+            )
+        except (OSError, TimeoutError, ssl.SSLError, http.client.HTTPException) as exc:
+            raise RuntimeError(
+                "Unable to fetch webpage due to a network error."
+            ) from exc
+
+
 
         try:
             if response.status in {301, 302, 303, 307, 308}:
@@ -261,3 +272,45 @@ def fetch_url(url: str) -> dict:
             connection.close()
 
     raise ValueError("Unable to fetch webpage.")
+
+
+def extract_content(html: str, url: str | None = None) -> dict:
+    """Extract meaningful text and title from webpage HTML."""
+
+    if not isinstance(html, str) or not html.strip():
+        raise ValueError("HTML content cannot be empty.")
+
+    try:
+        text = trafilatura.extract(
+            html,
+            url=url,
+            output_format="txt",
+            include_comments=False,
+            include_tables=True,
+            favor_precision=True,
+        )
+
+        if not text or not text.strip():
+            raise ValueError(
+                "Unable to extract meaningful webpage content."
+            )
+
+        metadata = trafilatura.extract_metadata(
+            html,
+            default_url=url,
+        )
+
+        title = metadata.title if metadata and metadata.title else None
+
+        return {
+            "title": title,
+            "text": text.strip(),
+        }
+
+    except ValueError:
+        raise
+
+    except Exception as exc:
+        raise RuntimeError(
+            "Webpage content extraction failed."
+        ) from exc

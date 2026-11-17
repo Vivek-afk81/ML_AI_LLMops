@@ -40,17 +40,24 @@ def add_memory_vector(
     )
 
 
-def search_memory_vectors(
-    query_embedding: list[float],
-    top_k: int = 5,
-):
-    """Find memories with embeddings similar to the query."""
+
+def search_memory_vectors(query_embedding: list[float], top_k: int = 5):
+    total = collection.count()
+
+    if total == 0:
+        return {
+            "ids": [[]],
+            "documents": [[]],
+            "metadatas": [[]],
+            "distances": [[]],
+        }
 
     return collection.query(
         query_embeddings=[query_embedding],
-        n_results=min(top_k, collection.count()),
+        n_results=min(top_k, total),
         include=["documents", "metadatas", "distances"],
     )
+
 
 
 def delete_memory_vector(memory_id: str):
