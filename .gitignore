@@ -40,3 +40,14 @@ models/*.pth
 models/*.bin
 models/*.safetensors
 models/*.onnx
+
+# Hugging Face / ML model cache
+model_cache/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+.venv/
