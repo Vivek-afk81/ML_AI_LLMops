@@ -1,17 +1,16 @@
+
 import socket
 import pytest
-
-from app.services.content_extractor import validate_url
-from app.services.content_extractor import extract_content
 
 from email.message import Message
 from urllib.parse import urlparse
 
+from app.services.content_extractor import validate_url, extract_content
 import app.services.content_extractor as extractor
+
 
 def mock_dns(monkeypatch, ip="8.8.8.8"):
     """Return a controlled DNS response."""
-
     monkeypatch.setattr(
         socket,
         "getaddrinfo",
@@ -63,33 +62,14 @@ def test_reject_invalid_port():
         validate_url("https://example.com:8080")
 
 
-    def __init__(self, status=200, body=b"<html>Hello</html>", headers=None):
-        self.status = status
-        self.body = body
-        self.headers = Message()
-
-        self.headers["Content-Type"] = "text/html; charset=utf-8"
-
-        if headers:
-            for key, value in headers.items():
-                self.headers[key] = value
-
-        if "Content-Length" not in self.headers:
-            self.headers["Content-Length"] = str(len(body))
-
-    def getheader(self, name):
-        return self.headers.get(name)
-
-    def read(self, size):
-        return self.body[:size]
-
 class FakeResponse:
+    """Simulate an HTTP response without making a network request."""
 
     def __init__(
         self,
         status=200,
         body=b"<html>Hello</html>",
-        headers=None
+        headers=None,
     ):
         self.status = status
         self.body = body
@@ -112,15 +92,19 @@ class FakeResponse:
     def read(self, size):
         return self.body[:size]
 
+
 class FakeConnection:
+    """Simulate an HTTP connection."""
+
     def close(self):
         pass
 
 
 def mock_destination(monkeypatch):
+    """Mock URL validation and DNS resolution."""
     def fake_validate(url):
         parsed = urlparse(url)
-        port = parsed.port or 443
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
 
         return url, parsed, "8.8.8.8", port
 
@@ -210,6 +194,7 @@ def test_reject_oversized_content(monkeypatch):
     with pytest.raises(ValueError, match="2 MB limit"):
         extractor.fetch_url("https://example.com")
 
+
 SAMPLE_HTML = """
 <html>
 <head>
@@ -249,16 +234,15 @@ def test_extract_content_with_url():
 
 
 def test_extract_empty_html():
-    import pytest
-
     with pytest.raises(ValueError, match="HTML content cannot be empty"):
         extract_content("")
 
 
 def test_extract_content_without_article():
-    import pytest
-
     html = "<html><head><title>Empty</title></head><body></body></html>"
 
-    with pytest.raises(ValueError, match="Unable to extract meaningful webpage content"):
+    with pytest.raises(
+        ValueError,
+        match="Unable to extract meaningful webpage content",
+    ):
         extract_content(html)
