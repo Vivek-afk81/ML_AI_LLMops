@@ -1,21 +1,25 @@
-#why slim because its a lightweight python image
-FROM python:3.14-slim
 
-#set the working directory inside container
+# Use a lightweight Python image
+FROM python:3.13-slim
+
+# Set working directory
 WORKDIR /app
 
-#Copy dependency list before copying application code
+# Python runtime settings
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Copy dependencies first
 COPY requirements.txt .
 
-#install the dependencies
-RUN pip install -r requirements.txt
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-#Copy application code and saved model inside /app
+# Copy application code
 COPY . .
 
-#Document the port used by the fast api application
+# FastAPI port
 EXPOSE 8000
 
-#start the api server when api is ready
-#0.0.0.0 -allows connections through the container's network interface
-CMD ["uvicorn","main:app","--host","0.0.0.0","--port","8000"]
+# Start RecallR API
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

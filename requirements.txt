@@ -1,8 +1,30 @@
-scikit-learn
+# API and Backend
 fastapi
-uvicorn
-joblib
+uvicorn[standard]
 pydantic
+pydantic-settings
+sqlalchemy
+
+# Machine Learning
+torch
+transformers
+sentence-transformers
+
+# Vector Database
+chromadb
+
+# Content Extraction
+trafilatura
+
+# Configuration
+PyYAML
+python-dotenv
+
+# MLOps
+mlflow
+
+# Testing
 pytest
 httpx
-mlflow
+
+certifi
